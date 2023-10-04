@@ -49,3 +49,12 @@ class ThreatExchangeExtensionManifest:
         if not isinstance(manifest, cls):
             raise ValueError(f"TX_MANIFEST is not a {cls.__name__}!")
         return manifest
+
+    @classmethod
+    def entrypoint(cls) -> None:
+        """
+        This is the entrypoint for the extension. It is called when the
+        extension is loaded. This is an optional method that can be implemented
+        in the subclass.
+        """
+        pass

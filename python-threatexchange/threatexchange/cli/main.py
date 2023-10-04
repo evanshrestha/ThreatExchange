@@ -35,6 +35,7 @@ import sys
 import typing as t
 import pathlib
 import shutil
+import traceback
 import warnings
 
 # Import pdq first with its hash order warning squelched, it's before our time
@@ -208,13 +209,22 @@ class _ExtendedTypes(t.NamedTuple):
         )
 
 
+def _run_manifest_entrypoint(manifest: ThreatExchangeExtensionManifest) -> None:
+    try:
+        manifest.entrypoint()
+    except Exception as exc:
+        error_str: str = traceback.format_exc()
+        raise RuntimeError(f"Error running entrypoint for {manifest}: {error_str}") from exc
+
+
 def _get_extended_functionality(config: CLiConfig) -> _ExtendedTypes:
     ret = _ExtendedTypes([], [], [], [])
     for extension in config.extensions:
         logging.debug("Loading extension %s", extension)
         try:
             manifest = ThreatExchangeExtensionManifest.load_from_module_name(extension)
-        except (ValueError, ImportError):
+            _run_manifest_entrypoint(manifest)
+        except (ValueError, ImportError, RuntimeError):
             ret.load_failures.append(extension)
         else:
             ret.signal_types.extend(manifest.signal_types)
